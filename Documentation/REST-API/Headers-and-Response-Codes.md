@@ -18,11 +18,11 @@ TODO: Figure these out
 
 Every HTTP response starts with a line with a return code which indicates the outcome of the request. The API uses some of the standard HTTP values:
 
-200 OK
-204 No Content
-400 Bad Request – this includes validation failures
-401 Unauthorized
-404 Not Found
-405 Method Not Allowed
-409 Conflict – the request is inconsistent with known constraints
-500 Internal Server Error
+* 200 OK
+* 204 No Content
+* 400 Bad Request – this includes validation failures
+* 401 Unauthorized
+* 404 Not Found
+* 405 Method Not Allowed
+* 409 Conflict – the request is inconsistent with known constraints
+* 500 Internal Server Error
