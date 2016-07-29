@@ -12,40 +12,69 @@ Even though the listeners are defined as separate entities in the configuration 
 
 The response to a GET request will be a JSON representation of the requested resource. The structure of the returned JSON object is dependant on the resource being requested and the current configuration of MaxScale (e.g. servers can have multiple weighting parameters).
 
-### /service
-
-Returns information about all services. Comparable to the current output of maxadmin show services.
-
 ### /service/:id
 
-Returns information about a specific service. Comparable to the current output of maxadmin show service <name>.
+Returns information about a specific service.
+
+#### Common fields
+
+All services will return these fields in the response. Services can return extra fields depending on the routing module in use.
+
+|Field              |Type        |Value                                         |
+|-------------------|------------|----------------------------------------------|
+|name               |string      |Service name                                  |
+|router             |string      |Router module                                 |
+|state              |string      |Service state                                 |
+|total_connections  |number      |Total number of connection to this service    |
+|current_connections|number      |Current number of connection to this service  |
+|started            |string      |When the service was started                  |
+|servers            |string array|The servers used by this service              |
+
+### /service
+
+Returns information about all services. Returns an array of JSON objects similar to the `service/:id` resource.
+
+### /server/:id
+
+Returns information about a specific server.
+
+#### Common fields
+
+All servers will return these fields in the response. In addition to these fields, it is also possible that servers return extra fields e.g. the weighting parameter.
+
+|Field    |Type  |Value             |
+|---------|------|------------------|
+|name     |string|Server name       |
+|address  |string|Server address    |
+|port     |number|Server port       |
+|protocol |string|Server protocol   |
 
 ### /server
 
 Returns information about all servers. Comparable to the output of maxadmin show servers.
 
-### /server/:id
+### /monitor/:id
 
-Returns information about a specific server. Comparable to the output of maxadmin show server <name>.
+Returns information about a specific monitor.
 
-Example output:
-```
-{
-    "name": "Server_1",
-    "address": "127.0.0.1",
-    "port": 3306,
-    "protocol": "MySQLBackend"
-}
-```
+#### Common fields
 
+All monitors will return these fields in the response. In addition to these fields, it is also possible that the monitor returns extra fields.
+
+|Field              |Type        |Value                                         |
+|-------------------|------------|----------------------------------------------|
+|name               |string      |Monitor name                                  |
+|module             |string      |Monitor module                                |
+|state              |string      |Monitor state                                 |
+|servers            |string array|The servers used by this monitor              |
+|monitor_interval   |number      |The monitoring interval in milliseconds       |
+|connect_timeout    |number      |Connect timeout for backend connections       |
+|read_timeout       |number      |Read timeout for backend connections          |
+|write_timeout      |number      |Write timeout for backend connections         |
 
 ### /monitor
 
 Returns information about all monitors. Comparable to the output of maxadmin show monitors.
-
-### /monitor/:id
-
-Returns information about a specific monitor. Comparable to the output of maxadmin show monitor <name>.
 
 ### /filter
 
