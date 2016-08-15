@@ -51,6 +51,7 @@ typedef struct servlistener
     struct dcb *listener;       /**< The DCB for the listener */
     struct users *users;        /**< The user data for this listener */
     HASHTABLE *resources;       /**< hastable for listener resources, i.e. database names */
+    bool inject_service_user;   /**< Inject the service user into the list of available users */
     struct service* service;    /**< The service which used by this listener */
     SPINLOCK lock;
     struct  servlistener *next; /**< Next service protocol */

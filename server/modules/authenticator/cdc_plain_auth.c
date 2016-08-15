@@ -507,6 +507,11 @@ int cdc_replace_users(SERV_LISTENER *listener)
         }
         else
         {
+            if (listener->inject_service_user)
+            {
+                cdc_set_service_user(listener);
+            }
+
             spinlock_acquire(&listener->lock);
 
             USERS *oldusers = listener->users;

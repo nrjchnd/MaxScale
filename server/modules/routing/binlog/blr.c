@@ -106,7 +106,6 @@ static  void    errorReply(ROUTER  *instance,
 static  int getCapabilities();
 static int blr_handler_config(void *userdata, const char *section, const char *name, const char *value);
 static int blr_handle_config_item(const char *name, const char *value, ROUTER_INSTANCE *inst);
-static int blr_set_service_mysql_user(SERVICE *service);
 static int blr_load_dbusers(const ROUTER_INSTANCE *router);
 static int blr_check_binlog(ROUTER_INSTANCE *router);
 int blr_read_events_all_events(ROUTER_INSTANCE *router, int fix, int debug);
@@ -581,16 +580,10 @@ createInstance(SERVICE *service, char **options)
         }
     }
 
-    /* Allocate dbusers for this router here instead of serviceStartPort() */
+    /* Force service user injection on all listeners */
     for (SERV_LISTENER *port = service->ports; port; port = port->next)
     {
-        if ((port->users = mysql_users_alloc()) == NULL)
-        {
-            MXS_ERROR("%s: Error allocating dbusers in createInstance",
-                      inst->service->name);
-            free_instance(inst);
-            return NULL;
-        }
+        port->inject_service_user = true;
     }
 
     /* Dynamically allocate master_host server struct, not written in any cnf file */
@@ -676,10 +669,6 @@ createInstance(SERVICE *service, char **options)
                       " Fix errors in it or configure with CHANGE MASTER TO ...",
                       inst->service->name, inst->binlogdir);
         }
-
-        /* Set service user or load db users */
-        blr_set_service_mysql_user(inst->service);
-
     }
     else
     {
@@ -2135,68 +2124,6 @@ blr_handle_config_item(const char *name, const char *value, ROUTER_INSTANCE *ins
     }
 
     return 1;
-}
-
-/**
- * Add the service user to mysql dbusers (service->users)
- * via mysql_users_alloc and add_mysql_users_with_host_ipv4
- * User is added for '%' and 'localhost' hosts
- *
- * @param service   The current service
- * @return      0 on success, 1 on failure
- */
-static int
-blr_set_service_mysql_user(SERVICE *service)
-{
-    char *dpwd = NULL;
-    char *newpasswd = NULL;
-    char *service_user = NULL;
-    char *service_passwd = NULL;
-
-    if (serviceGetUser(service, &service_user, &service_passwd) == 0)
-    {
-        MXS_ERROR("failed to get service user details for service %s",
-                  service->name);
-
-        return 1;
-    }
-
-    dpwd = decryptPassword(service->credentials.authdata);
-
-    if (!dpwd)
-    {
-        MXS_ERROR("decrypt password failed for service user %s, service %s",
-                  service_user,
-                  service->name);
-
-        return 1;
-    }
-
-    newpasswd = create_hex_sha1_sha1_passwd(dpwd);
-
-    if (!newpasswd)
-    {
-        MXS_ERROR("create hex_sha1_sha1_password failed for service user %s",
-                  service_user);
-
-        MXS_FREE(dpwd);
-        return 1;
-    }
-
-    /** Add the service user for % and localhost to all listeners so that
-     * it can always be used. */
-    for (SERV_LISTENER *port = service->ports; port; port = port->next)
-    {
-        add_mysql_users_with_host_ipv4(port->users, service->credentials.name,
-                                       "%", newpasswd, "Y", "");
-        add_mysql_users_with_host_ipv4(port->users, service->credentials.name,
-                                       "localhost", newpasswd, "Y", "");
-    }
-
-    MXS_FREE(newpasswd);
-    MXS_FREE(dpwd);
-
-    return 0;
 }
 
 /**

@@ -156,6 +156,7 @@ static char *listener_params[] =
     "ssl_key",
     "ssl_version",
     "ssl_cert_verify_depth",
+    "inject_service_user",
     NULL
 };
 
@@ -2758,6 +2759,7 @@ int create_new_listener(CONFIG_CONTEXT *obj, bool startnow)
     char *protocol = config_get_value(obj->parameters, "protocol");
     char *socket = config_get_value(obj->parameters, "socket");
     char *authenticator = config_get_value(obj->parameters, "authenticator");
+    char *inject_service_user = config_get_value(obj->parameters, "inject_service_user");
 
     if (service_name && protocol && (socket || port))
     {
@@ -2775,8 +2777,13 @@ int create_new_listener(CONFIG_CONTEXT *obj, bool startnow)
                 }
                 else
                 {
-                    serviceAddProtocol(service, obj->object, protocol, socket, 0,
+                    int rc = serviceAddProtocol(service, obj->object, protocol, socket, 0,
                                        authenticator, ssl_info);
+                    if (inject_service_user && rc)
+                    {
+                        service->ports->inject_service_user = config_truth_value(inject_service_user);
+                    }
+
                     if (startnow)
                     {
                         serviceStartProtocol(service, protocol, 0);
@@ -2796,8 +2803,13 @@ int create_new_listener(CONFIG_CONTEXT *obj, bool startnow)
                 }
                 else
                 {
-                    serviceAddProtocol(service, obj->object, protocol, address,
-                                       atoi(port), authenticator, ssl_info);
+                    int rc = serviceAddProtocol(service, obj->object, protocol, address,
+                                                atoi(port), authenticator, ssl_info);
+                    if (inject_service_user && rc)
+                    {
+                        service->ports->inject_service_user = config_truth_value(inject_service_user);
+                    }
+
                     if (startnow)
                     {
                         serviceStartProtocol(service, protocol, atoi(port));

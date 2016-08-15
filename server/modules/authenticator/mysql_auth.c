@@ -820,6 +820,64 @@ mysql_auth_free_client_data(DCB *dcb)
 }
 
 /**
+ * Add the service user to mysql dbusers (service->users)
+ * via mysql_users_alloc and add_mysql_users_with_host_ipv4
+ * User is added for '%' and 'localhost' hosts
+ *
+ * @param service   The current service
+ * @return      0 on success, 1 on failure
+ */
+static int
+mysql_set_service_user(SERV_LISTENER *port)
+{
+    int rval = 1;
+    char *service_user = NULL;
+    char *service_passwd = NULL;
+
+    if (serviceGetUser(port->service, &service_user, &service_passwd) != 0)
+    {
+        char *dpwd = decryptPassword(port->service->credentials.authdata);
+
+        if (dpwd)
+        {
+            char *newpasswd = create_hex_sha1_sha1_passwd(dpwd);
+
+            if (newpasswd)
+            {
+                /**
+                 * The service user can use any host and has access to all
+                 * databases. If this user is used to connect to a backend
+                 * server, the user needs to also exist on the backend with
+                 * adequate grants.
+                 */
+                add_mysql_users_with_host_ipv4(port->users, port->service->credentials.name,
+                                               "%", newpasswd, "Y", "");
+                add_mysql_users_with_host_ipv4(port->users, port->service->credentials.name,
+                                               "localhost", newpasswd, "Y", "");
+                rval = 0;
+                MXS_FREE(newpasswd);
+            }
+            else
+            {
+                MXS_ERROR("[%s] create hex_sha1_sha1_password failed for service user %s",
+                          port->service->name, service_user);
+            }
+            MXS_FREE(dpwd);
+        }
+        else
+        {
+            MXS_ERROR("[%s] decrypt password failed for service user %s",
+                      port->service->name, service_user);
+        }
+    }
+    else
+    {
+        MXS_ERROR("[%s] failed to get service user details", port->service->name);
+    }
+    return rval;
+}
+
+/**
  * @brief Load MySQL authentication users
  *
  * This function loads MySQL users from the backend database.
@@ -866,12 +924,19 @@ static int mysql_auth_load_users(SERV_LISTENER *port)
             strcat(path, DBUSERS_FILE);
             dbusers_save(port->users, path);
         }
+
+        if (port->inject_service_user)
+        {
+            /** Inject the service user after creating the cache. This way we keep the cache smaller
+                and only store real users read from the backend. */
+            mysql_set_service_user(port);
+        }
     }
 
     if (loaded == 0)
     {
-        MXS_ERROR("[%s]: failed to load any user information. Authentication"
-                  " will probably fail as a result.", service->name);
+        MXS_WARNING("[%s]: failed to load any user information. Authentication"
+                    " will probably fail as a result.", service->name);
     }
 
     MXS_NOTICE("[%s] Loaded %d MySQL users for listener %s.", service->name, loaded, port->name);
