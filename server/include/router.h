@@ -85,7 +85,7 @@ typedef struct router_object
  * must update these versions numbers in accordance with the rules in
  * modinfo.h.
  */
-#define ROUTER_VERSION  { 1, 0, 0 }
+#define MXS_ROUTER_VERSION  { 1, 0, 0 }
 
 /**
  * Router capability type. Indicates what kind of input router accepts.

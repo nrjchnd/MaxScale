@@ -128,7 +128,7 @@ struct query_classifier
     char** (*qc_get_database_names)(GWBUF* querybuf, int* size);
 };
 
-#define QUERY_CLASSIFIER_VERSION {1, 0, 0}
+#define MXS_QUERY_CLASSIFIER_VERSION {1, 0, 0}
 
 EXTERN_C_BLOCK_END
 

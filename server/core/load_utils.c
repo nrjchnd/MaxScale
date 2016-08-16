@@ -51,11 +51,11 @@ static MODULES *registered = NULL;
 
 static MODULES *find_module(const char *module);
 static void register_module(const char *module,
-                            const char  *type,
-                            void        *dlhandle,
-                            char        *version,
-                            void        *modobj,
-                            MODULE_INFO *info);
+                            const char *type,
+                            MODULE_API modapi,
+                            MODULE_VERSION api_version,
+                            void *dlhandle,
+                            MODULE_INFO *mod_info);
 static void unregister_module(const char *module);
 int module_create_feedback_report(GWBUF **buffer, MODULES *modules, FEEDBACK_CONF *cfg);
 int do_http_post(GWBUF *buffer, void *cfg);
@@ -116,7 +116,7 @@ WriteMemoryCallback(void *contents, size_t size, size_t nmemb, void *userp)
 void *
 load_module(const char *module, const char *type)
 {
-    char *home, *version;
+    char *home;
     char fname[MAXPATHLEN + 1];
     void *dlhandle, *sym;
     char *(*ver)();
@@ -157,63 +157,63 @@ load_module(const char *module, const char *type)
             return NULL;
         }
 
-        if ((sym = dlsym(dlhandle, "version")) == NULL)
+
+        if ((sym = dlsym(dlhandle, "modapi")) == NULL)
         {
-            MXS_ERROR("Version interface not supported by "
-                      "module: %s\n\t\t\t      %s.",
-                      module,
-                      dlerror());
+            MXS_ERROR("Unable to find symbol for module API type. Module: %s Error: %s",
+                      module, dlerror());
             dlclose(dlhandle);
             return NULL;
         }
-        ver = sym;
-        version = ver();
 
-        /*
-         * If the module has a ModuleInit function cal it now.
-         */
-        if ((sym = dlsym(dlhandle, "ModuleInit")) != NULL)
+        MODULE_API modapi = *(MODULE_API*)sym;
+
+        if ((sym = dlsym(dlhandle, "api_version")) == NULL)
         {
-            void (*ModuleInit)() = sym;
-            ModuleInit();
+            MXS_ERROR("Unable to find symbol for module API version. Module: %s Error: %s",
+                      module, dlerror());
+            dlclose(dlhandle);
+            return NULL;
         }
+
+        MODULE_VERSION api_version = *(MODULE_VERSION*)sym;
 
         if ((sym = dlsym(dlhandle, "info")) != NULL)
         {
             int fatal = 0;
             mod_info = sym;
             if (strcmp(type, MODULE_PROTOCOL) == 0
-                && mod_info->modapi != MODULE_API_PROTOCOL)
+                && modapi != MODULE_API_PROTOCOL)
             {
                 MXS_ERROR("Module '%s' does not implement the protocol API.", module);
                 fatal = 1;
             }
             if (strcmp(type, MODULE_AUTHENTICATOR) == 0
-                && mod_info->modapi != MODULE_API_AUTHENTICATOR)
+                && modapi != MODULE_API_AUTHENTICATOR)
             {
                 MXS_ERROR("Module '%s' does not implement the authenticator API.", module);
                 fatal = 1;
             }
             if (strcmp(type, MODULE_ROUTER) == 0
-                && mod_info->modapi != MODULE_API_ROUTER)
+                && modapi != MODULE_API_ROUTER)
             {
                 MXS_ERROR("Module '%s' does not implement the router API.", module);
                 fatal = 1;
             }
             if (strcmp(type, MODULE_MONITOR) == 0
-                && mod_info->modapi != MODULE_API_MONITOR)
+                && modapi != MODULE_API_MONITOR)
             {
                 MXS_ERROR("Module '%s' does not implement the monitor API.", module);
                 fatal = 1;
             }
             if (strcmp(type, MODULE_FILTER) == 0
-                && mod_info->modapi != MODULE_API_FILTER)
+                && modapi != MODULE_API_FILTER)
             {
                 MXS_ERROR("Module '%s' does not implement the filter API.", module);
                 fatal = 1;
             }
             if (strcmp(type, MODULE_QUERY_CLASSIFIER) == 0
-                && mod_info->modapi != MODULE_API_QUERY_CLASSIFIER)
+                && modapi != MODULE_API_QUERY_CLASSIFIER)
             {
                 MXS_ERROR("Module '%s' does not implement the query classifier API.", module);
                 fatal = 1;
@@ -225,23 +225,10 @@ load_module(const char *module, const char *type)
             }
         }
 
-        if ((sym = dlsym(dlhandle, "GetModuleObject")) == NULL)
-        {
-            MXS_ERROR("Expected entry point interface missing "
-                      "from module: %s\n\t\t\t      %s.",
-                      module,
-                      dlerror());
-            dlclose(dlhandle);
-            return NULL;
-        }
-        ep = sym;
-        modobj = ep();
-
-        MXS_NOTICE("Loaded module %s: %s from %s",
-                   module,
-                   version,
-                   fname);
-        register_module(module, type, dlhandle, version, modobj, mod_info);
+        MXS_NOTICE("Loaded module %s version %s (API version %d.%d.%d) from %s", module, mod_info->version,
+                   api_version.major, api_version.minor, api_version.patch, fname);
+        register_module(module, type, modapi, api_version, dlhandle, mod_info);
+        modobj = mod_info->object;
     }
     else
     {
@@ -321,31 +308,28 @@ find_module(const char *module)
 static void
 register_module(const char *module,
                 const char *type,
+                MODULE_API modapi,
+                MODULE_VERSION api_version,
                 void *dlhandle,
-                char *version,
-                void *modobj,
                 MODULE_INFO *mod_info)
 {
-    module = MXS_STRDUP(module);
-    type = MXS_STRDUP(type);
-    version = MXS_STRDUP(version);
-
+    char *my_module = MXS_STRDUP(module);
     MODULES *mod = (MODULES *)MXS_MALLOC(sizeof(MODULES));
 
-    if (!module || !type || !version || !mod)
+    if (!module || !type || !mod)
     {
-        MXS_FREE((void*)module);
-        MXS_FREE((void*)type);
-        MXS_FREE(version);
+        MXS_FREE(my_module);
         MXS_FREE(mod);
         return;
     }
 
-    mod->module = (char*)module;
-    mod->type = (char*)type;
+    mod->module = my_module;
+    mod->type = type;
     mod->handle = dlhandle;
-    mod->version = version;
-    mod->modobj = modobj;
+    mod->version = mod_info->version;
+    mod->modapi = modapi;
+    mod->api_version = api_version;
+    mod->modobj = mod_info->object;
     mod->next = registered;
     mod->info = mod_info;
     registered = mod;
@@ -393,8 +377,6 @@ unregister_module(const char *module)
      */
     dlclose(mod->handle);
     MXS_FREE(mod->module);
-    MXS_FREE(mod->type);
-    MXS_FREE(mod->version);
     MXS_FREE(mod);
 }
 
@@ -451,9 +433,9 @@ dprintAllModules(DCB *dcb)
         dcb_printf(dcb, "%-15s | %-15s | %-7s ", ptr->module, ptr->type, ptr->version);
         if (ptr->info)
             dcb_printf(dcb, "| %d.%d.%d | %s",
-                       ptr->info->api_version.major,
-                       ptr->info->api_version.minor,
-                       ptr->info->api_version.patch,
+                       ptr->api_version.major,
+                       ptr->api_version.minor,
+                       ptr->api_version.patch,
                        ptr->info->status == MODULE_IN_DEVELOPMENT
                        ? "In Development"
                        : (ptr->info->status == MODULE_ALPHA_RELEASE
@@ -522,11 +504,11 @@ moduleRowCallback(RESULTSET *set, void *data)
     (*rowno)++;
     row = resultset_make_row(set);
     resultset_row_set(row, 0, ptr->module);
-    resultset_row_set(row, 1, ptr->type);
-    resultset_row_set(row, 2, ptr->version);
-    snprintf(buf, 19, "%d.%d.%d", ptr->info->api_version.major,
-             ptr->info->api_version.minor,
-             ptr->info->api_version.patch);
+    resultset_row_set(row, 1, (char*)ptr->type);
+    resultset_row_set(row, 2, (char*)ptr->version);
+    snprintf(buf, 19, "%d.%d.%d", ptr->api_version.major,
+             ptr->api_version.minor,
+             ptr->api_version.patch);
     buf[19] = '\0';
     resultset_row_set(row, 3, buf);
     resultset_row_set(row, 4, ptr->info->status == MODULE_IN_DEVELOPMENT
@@ -771,9 +753,9 @@ module_create_feedback_report(GWBUF **buffer, MODULES *modules, FEEDBACK_CONF *c
         {
             snprintf(data_ptr, _NOTIFICATION_REPORT_ROW_LEN, "module_%s_api\t%d.%d.%d\n",
                      ptr->module,
-                     ptr->info->api_version.major,
-                     ptr->info->api_version.minor,
-                     ptr->info->api_version.patch);
+                     ptr->api_version.major,
+                     ptr->api_version.minor,
+                     ptr->api_version.patch);
 
             data_ptr += strlen(data_ptr);
             snprintf(data_ptr, _NOTIFICATION_REPORT_ROW_LEN, "module_%s_releasestatus\t%s\n",

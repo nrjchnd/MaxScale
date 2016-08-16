@@ -79,7 +79,7 @@ typedef struct gw_protocol
  * the GWPROTOCOL structure is changed. See the rules defined in modinfo.h
  * that define how these numbers should change.
  */
-#define GWPROTOCOL_VERSION      {1, 1, 0}
+#define MXS_PROTOCOL_VERSION      {1, 1, 0}
 
 
 #endif /* GW_PROTOCOL_H */

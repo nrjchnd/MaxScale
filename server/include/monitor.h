@@ -68,7 +68,7 @@
  * unregisterServer is called to remove a server from the set of servers that need to be
  * monitored.
  */
-typedef struct
+typedef struct monitor_object
 {
     void *(*startMonitor)(void *, void*);
     void (*stopMonitor)(void *);
@@ -79,7 +79,7 @@ typedef struct
  * The monitor API version number. Any change to the monitor module API
  * must change these versions usign the rules defined in modinfo.h
  */
-#define MONITOR_VERSION {3, 0, 0}
+#define MXS_MONITOR_VERSION {3, 0, 0}
 
 /** Monitor's poll frequency */
 #define MON_BASE_INTERVAL_MS 100

@@ -40,15 +40,15 @@ EXTERN_C_BLOCK_BEGIN
 
 typedef struct modules
 {
-    char    *module;    /**< The name of the module */
-    char    *type;      /**< The module type */
-    char    *version;   /**< Module version */
-    void    *handle;    /**< The handle returned by dlopen */
-    void    *modobj;    /**< The module "object" this is the set of entry points */
-    MODULE_INFO
-    *info;      /**< The module information */
-    struct  modules
-        *next;      /**< Next module in the linked list */
+    char            *module;      /**< The name of the module */
+    const char      *type;        /**< The module type */
+    const char      *version;     /**< Module version */
+    void            *handle;      /**< The handle returned by dlopen */
+    void            *modobj;      /**< The module "object" this is the set of entry points */
+    MODULE_INFO     *info;        /**< The module information */
+    MODULE_API       modapi;      /**< Module API type */
+    MODULE_VERSION   api_version; /**< Module API version */
+    struct  modules *next;        /**< Next module in the linked list */
 } MODULES;
 
 /**

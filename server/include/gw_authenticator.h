@@ -71,7 +71,7 @@ typedef struct gw_authenticator
  * the GWAUTHENTICATOR structure is changed. See the rules defined in modinfo.h
  * that define how these numbers should change.
  */
-#define GWAUTHENTICATOR_VERSION      {1, 1, 0}
+#define MXS_AUTHENTICATOR_VERSION      {1, 1, 0}
 
 
 #endif /* GW_AUTHENTICATOR_H */
