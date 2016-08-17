@@ -2066,53 +2066,32 @@ void qc_thread_end(void)
 
 extern "C"
 {
+    static QUERY_CLASSIFIER qc =
+        {
+            qc_init,
+            qc_end,
+            qc_thread_init,
+            qc_thread_end,
+            qc_parse,
+            qc_get_type,
+            qc_get_operation,
+            qc_get_created_table_name,
+            qc_is_drop_table_query,
+            qc_is_real_query,
+            qc_get_table_names,
+            NULL,
+            qc_query_has_clause,
+            qc_get_affected_fields,
+            qc_get_database_names,
+        };
 
-static char version_string[] = "V1.0.0";
-
-static QUERY_CLASSIFIER qc =
-{
-    qc_init,
-    qc_end,
-    qc_thread_init,
-    qc_thread_end,
-    qc_parse,
-    qc_get_type,
-    qc_get_operation,
-    qc_get_created_table_name,
-    qc_is_drop_table_query,
-    qc_is_real_query,
-    qc_get_table_names,
-    NULL,
-    qc_query_has_clause,
-    qc_get_affected_fields,
-    qc_get_database_names,
-};
-
- /* @see function load_module in load_utils.c for explanation of the following
-  * lint directives.
- */
-/*lint -e14 */
-MODULE_INFO info =
-{
-    MODULE_API_QUERY_CLASSIFIER,
-    MODULE_IN_DEVELOPMENT,
-    QUERY_CLASSIFIER_VERSION,
-    const_cast<char*>("Query classifier based upon MySQL Embedded"),
-};
-
-char* version()
-{
-    return const_cast<char*>(version_string);
-}
-
-void ModuleInit()
-{
-}
-
-QUERY_CLASSIFIER* GetModuleObject()
-{
-    return &qc;
-}
-/*lint +e14 */
-
+    MXS_DECLARE_MODULE(QUERY_CLASSIFIER)
+    {
+        MODULE_API_QUERY_CLASSIFIER,
+        MODULE_IN_DEVELOPMENT,
+        "Query classifier based upon MySQL Embedded",
+        "V1.0.0",
+        NULL,
+        &qc
+    };
 }

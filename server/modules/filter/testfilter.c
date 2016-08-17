@@ -11,9 +11,9 @@
  * Public License.
  */
 #include <stdio.h>
+#include <modinfo.h>
 #include <filter.h>
 #include <maxscale/alloc.h>
-#include <modinfo.h>
 #include <modutil.h>
 #include <atomic.h>
 
@@ -29,24 +29,13 @@
  * @endverbatim
  */
 
-MODULE_INFO     info =
-{
-    MODULE_API_FILTER,
-    MODULE_BETA_RELEASE,
-    FILTER_VERSION,
-    "A simple query counting filter"
-};
-
-static char *version_str = "V1.0.0";
-
-static  FILTER  *createInstance(char **options, FILTER_PARAMETER **params);
-static  void    *newSession(FILTER *instance, SESSION *session);
+static  FILTER *createInstance(char **options, FILTER_PARAMETER **params);
+static  void   *newSession(FILTER *instance, SESSION *session);
 static  void    closeSession(FILTER *instance, void *session);
 static  void    freeSession(FILTER *instance, void *session);
 static  void    setDownstream(FILTER *instance, void *fsession, DOWNSTREAM *downstream);
-static  int routeQuery(FILTER *instance, void *fsession, GWBUF *queue);
+static  int     routeQuery(FILTER *instance, void *fsession, GWBUF *queue);
 static  void    diagnostic(FILTER *instance, void *fsession, DCB *dcb);
-
 
 static FILTER_OBJECT MyObject =
 {
@@ -59,6 +48,15 @@ static FILTER_OBJECT MyObject =
     routeQuery,
     NULL,
     diagnostic,
+};
+
+MXS_DECLARE_MODULE(FILTER)
+{
+    MODULE_BETA_RELEASE,
+    "A simple query counting filter",
+    "V1.0.0",
+    NULL,
+    &MyObject
 };
 
 /**
@@ -77,43 +75,6 @@ typedef struct
     DOWNSTREAM  down;
     int     count;
 } TEST_SESSION;
-
-/**
- * Implementation of the mandatory version entry point
- *
- * @return version string of the module
- */
-char *
-version()
-{
-    return version_str;
-}
-
-/**
- * The module initialisation routine, called when the module
- * is first loaded.
- * @see function load_module in load_utils.c for explanation of lint
- */
-/*lint -e14 */
-void
-ModuleInit()
-{
-}
-/*lint +e14 */
-
-/**
- * The module entry point routine. It is this routine that
- * must populate the structure that is referred to as the
- * "module object", this is a structure with the set of
- * external entry points for this module.
- *
- * @return The module object
- */
-FILTER_OBJECT *
-GetModuleObject()
-{
-    return &MyObject;
-}
 
 /**
  * Create an instance of the filter for a particular service

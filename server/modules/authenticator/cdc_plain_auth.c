@@ -37,30 +37,11 @@
 /* Max number of load calls within the time interval */
 #define CDC_USERS_REFRESH_MAX_PER_TIME 4
 
-
-MODULE_INFO info =
-{
-    MODULE_API_AUTHENTICATOR,
-    MODULE_GA,
-    GWAUTHENTICATOR_VERSION,
-    "The CDC client to MaxScale authenticator implementation"
-};
-
-static char *version_str = "V1.1.0";
-
 static int  cdc_auth_set_protocol_data(DCB *dcb, GWBUF *buf);
 static bool cdc_auth_is_client_ssl_capable(DCB *dcb);
 static int  cdc_auth_authenticate(DCB *dcb);
 static void cdc_auth_free_client_data(DCB *dcb);
-
-static int cdc_set_service_user(SERV_LISTENER *listener);
 static int cdc_replace_users(SERV_LISTENER *listener);
-
-extern char  *gw_bin2hex(char *out, const uint8_t *in, unsigned int len);
-extern void gw_sha1_str(const uint8_t *in, int in_len, uint8_t *out);
-extern char *create_hex_sha1_sha1_passwd(char *passwd);
-extern char *decryptPassword(char *crypt);
-
 
 /*
  * The "module object" for mysql client authenticator module.
@@ -73,6 +54,21 @@ static GWAUTHENTICATOR MyObject =
     cdc_auth_free_client_data,            /* Free the client data held in DCB */
     cdc_replace_users
 };
+
+MXS_DECLARE_MODULE(AUTHENTICATOR)
+{
+    MODULE_GA,
+    "The CDC client to MaxScale authenticator implementation",
+    "V1.1.0",
+    NULL,
+    &MyObject
+};
+
+static int cdc_set_service_user(SERV_LISTENER *listener);
+extern char  *gw_bin2hex(char *out, const uint8_t *in, unsigned int len);
+extern void gw_sha1_str(const uint8_t *in, int in_len, uint8_t *out);
+extern char *create_hex_sha1_sha1_passwd(char *passwd);
+extern char *decryptPassword(char *crypt);
 
 static int cdc_auth_check(
     DCB           *dcb,
@@ -88,37 +84,6 @@ static int cdc_auth_set_client_data(
     uint8_t *client_auth_packet,
     int client_auth_packet_size
 );
-
-/**
- * Implementation of the mandatory version entry point
- *
- * @return version string of the module
- */
-char* version()
-{
-    return version_str;
-}
-
-/**
- * The module initialisation routine, called when the module
- * is first loaded.
- */
-void ModuleInit()
-{
-}
-
-/**
- * The module entry point routine. It is this routine that
- * must populate the structure that is referred to as the
- * "module object", this is a structure with the set of
- * external entry points for this module.
- *
- * @return The module object
- */
-GWAUTHENTICATOR* GetModuleObject()
-{
-    return &MyObject;
-}
 
 /**
  * @brief Function to easily call authentication check.

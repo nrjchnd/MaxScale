@@ -82,8 +82,6 @@
 #include <maxscale/alloc.h>
 #include <gw.h>
 
-static char *version_str = "V2.1.0";
-
 /* The router entry points */
 static  ROUTER  *createInstance(SERVICE *service, char **options);
 static void free_instance(ROUTER_INSTANCE *instance);
@@ -126,25 +124,9 @@ static ROUTER_OBJECT MyObject =
     getCapabilities
 };
 
-static void stats_func(void *);
-
-static bool rses_begin_locked_router_action(ROUTER_SLAVE *);
-static void rses_end_locked_router_action(ROUTER_SLAVE *);
-GWBUF *blr_cache_read_response(ROUTER_INSTANCE *router, char *response);
-
 static SPINLOCK instlock;
 static ROUTER_INSTANCE *instances;
-
-/**
- * Implementation of the mandatory version entry point
- *
- * @return version string of the module
- */
-char *
-version()
-{
-    return version_str;
-}
+#define VERSION_STR "V2.1.0"
 
 /**
  * The module initialisation routine, called when the module
@@ -153,24 +135,25 @@ version()
 void
 ModuleInit()
 {
-    MXS_NOTICE("Initialise binlog router module %s.\n", version_str);
+    MXS_NOTICE("Initialise binlog router module %s.", VERSION_STR);
     spinlock_init(&instlock);
     instances = NULL;
 }
 
-/**
- * The module entry point routine. It is this routine that
- * must populate the structure that is referred to as the
- * "module object", this is a structure with the set of
- * external entry points for this module.
- *
- * @return The module object
- */
-ROUTER_OBJECT *
-GetModuleObject()
+MXS_DECLARE_MODULE(ROUTER)
 {
-    return &MyObject;
-}
+    MODULE_GA,
+    "Replication protocol proxy router",
+    VERSION_STR,
+    ModuleInit,
+    &MyObject
+};
+
+static void stats_func(void *);
+
+static bool rses_begin_locked_router_action(ROUTER_SLAVE *);
+static void rses_end_locked_router_action(ROUTER_SLAVE *);
+GWBUF *blr_cache_read_response(ROUTER_INSTANCE *router, char *response);
 
 /**
  * Create an instance of the router for a particular service

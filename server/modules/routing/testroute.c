@@ -15,16 +15,6 @@
 #include <router.h>
 #include <modinfo.h>
 
-static char *version_str = "V1.0.0";
-
-MODULE_INFO     info =
-{
-    MODULE_API_ROUTER,
-    MODULE_IN_DEVELOPMENT,
-    ROUTER_VERSION,
-    "A test router - not for use in real systems"
-};
-
 static  ROUTER *createInstance(SERVICE *service, char **options);
 static  void   *newSession(ROUTER *instance, SESSION *session);
 static  void   closeSession(ROUTER *instance, void *session);
@@ -53,6 +43,15 @@ static ROUTER_OBJECT MyObject =
     getCapabilities
 };
 
+MXS_DECLARE_MODULE(ROUTER)
+{
+    MODULE_IN_DEVELOPMENT,
+    "A test router - not for use in real systems",
+    "V1.0.0",
+    NULL,
+    &MyObject
+};
+
 typedef struct
 {
 } TESTROUTER;
@@ -60,41 +59,6 @@ typedef struct
 typedef struct
 {
 } TESTSESSION;
-
-/**
- * Implementation of the mandatory version entry point
- *
- * @return version string of the module
- */
-char *
-version()
-{
-    return version_str;
-}
-
-/**
- * The module initialisation routine, called when the module
- * is first loaded.
- */
-void
-ModuleInit()
-{
-
-}
-
-/**
- * The module entry point routine. It is this routine that
- * must populate the structure that is referred to as the
- * "module object", this is a structure with the set of
- * external entry points for this module.
- *
- * @return The module object
- */
-ROUTER_OBJECT *
-GetModuleObject()
-{
-    return &MyObject;
-}
 
 /**
  * Create an instance of the router for a particular service

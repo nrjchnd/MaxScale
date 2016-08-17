@@ -30,21 +30,6 @@
 #include <buffer.h>
 #include <gw_protocol.h>
 
- /* @see function load_module in load_utils.c for explanation of the following
-  * lint directives.
- */
-/*lint -e14 */
-MODULE_INFO info =
-{
-    MODULE_API_PROTOCOL,
-    MODULE_IN_DEVELOPMENT,
-    GWPROTOCOL_VERSION,
-    "Test protocol"
-};
-/*lint +e14 */
-
-static char *version_str = "V1.1.0";
-
 static int test_read(DCB* dcb){ return 1;}
 static int test_write(DCB *dcb, GWBUF* buf){ return 1;}
 static int test_write_ready(DCB *dcb){ return 1;}
@@ -58,6 +43,7 @@ static int test_auth(DCB* dcb, struct server *srv, struct session *ses, GWBUF *b
 static int test_session(DCB *dcb, void* data){ return 1;}
 static char *test_default_auth(){return "NullAuthAllow";}
 static int test_connection_limit(DCB *dcb, int limit){return 0;}
+
 /**
  * The "module object" for the httpd protocol module.
  */
@@ -78,39 +64,15 @@ static GWPROTOCOL MyObject =
     test_connection_limit   /**< Connection limit        */
 };
 
-
-/**
- * Implementation of the mandatory version entry point
- *
- * @return version string of the module
- *
- * @see function load_module in load_utils.c for explanation of the following
- * lint directives.
- */
+/* @see function load_module in load_utils.c for explanation of the following
+ * lint directives. */
 /*lint -e14 */
-char* version()
+MXS_DECLARE_MODULE(PROTOCOL)
 {
-    return version_str;
-}
-
-/**
- * The module initialisation routine, called when the module
- * is first loaded.
- */
-void ModuleInit()
-{
-}
-
-/**
- * The module entry point routine. It is this routine that
- * must populate the structure that is referred to as the
- * "module object", this is a structure with the set of
- * external entry points for this module.
- *
- * @return The module object
- */
-GWPROTOCOL* GetModuleObject()
-{
-    return &MyObject;
-}
+    MODULE_IN_DEVELOPMENT,
+    "Test protocol",
+    "V1.1.0",
+    NULL,
+    &MyObject
+};
 /*lint +e14 */

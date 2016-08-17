@@ -40,22 +40,8 @@
 #include <log_manager.h>
 #include <resultset.h>
 
- /* @see function load_module in load_utils.c for explanation of the following
-  * lint directives.
- */
-/*lint -e14 */
-MODULE_INFO info =
-{
-    MODULE_API_PROTOCOL,
-    MODULE_IN_DEVELOPMENT,
-    GWPROTOCOL_VERSION,
-    "An experimental HTTPD implementation for use in administration"
-};
-/*lint +e14 */
-
 #define ISspace(x) isspace((int)(x))
 #define HTTP_SERVER_STRING "MaxScale(c) v.1.0.0"
-static char *version_str = "V1.2.0";
 
 static int httpd_read_event(DCB* dcb);
 static int httpd_write_event(DCB *dcb);
@@ -89,40 +75,17 @@ static GWPROTOCOL MyObject =
     NULL                /**< Connection limit reached      */
 };
 
-/**
- * Implementation of the mandatory version entry point
- *
- * @return version string of the module
- *
- * @see function load_module in load_utils.c for explanation of the following
- * lint directives.
- */
+/** @see function load_module in load_utils.c for explanation of the following
+ * lint directives */
 /*lint -e14 */
-char* version()
+MXS_DECLARE_MODULE(PROTOCOL)
 {
-    return version_str;
-}
-
-/**
- * The module initialisation routine, called when the module
- * is first loaded.
- */
-void ModuleInit()
-{
-}
-
-/**
- * The module entry point routine. It is this routine that
- * must populate the structure that is referred to as the
- * "module object", this is a structure with the set of
- * external entry points for this module.
- *
- * @return The module object
- */
-GWPROTOCOL* GetModuleObject()
-{
-    return &MyObject;
-}
+    MODULE_IN_DEVELOPMENT,
+    "An experimental HTTPD implementation for use in administration",
+    "V1.2.0",
+    NULL,
+    &MyObject
+};
 /*lint +e14 */
 
 static const char* default_auth = "NullAuthAllow";

@@ -41,14 +41,6 @@
 /** Hashtable size for the per user shard maps */
 #define SCHEMAROUTER_USERHASH_SIZE 10
 
-MODULE_INFO info =
-{
-    MODULE_API_ROUTER,
-    MODULE_BETA_RELEASE,
-    ROUTER_VERSION,
-    "A database sharding router for simple sharding"
-};
-
 
 /**
  * @file schemarouter.c The entry points for the simple sharding
@@ -64,8 +56,6 @@ MODULE_INFO info =
  *
  * @endverbatim
  */
-
-static char *version_str = "V1.0.0";
 
 static ROUTER* createInstance(SERVICE *service, char **options);
 static void*   newSession(ROUTER *instance, SESSION *session);
@@ -85,24 +75,7 @@ static void handleError(ROUTER*        instance,
                         DCB*           backend_dcb,
                         error_action_t action,
                         bool*          succp);
-
-static int router_get_servercount(ROUTER_INSTANCE* router);
-static backend_ref_t* get_bref_from_dcb(ROUTER_CLIENT_SES* rses, DCB* dcb);
-
-static route_target_t get_shard_route_target(qc_query_type_t qtype,
-                                             bool            trx_active,
-                                             HINT*           hint);
-
 static int getCapabilities();
-
-static bool connect_backend_servers(backend_ref_t*   backend_ref,
-                                    int              router_nservers,
-                                    SESSION*         session,
-                                    ROUTER_INSTANCE* router);
-
-static bool get_shard_dcb(DCB**              dcb,
-                          ROUTER_CLIENT_SES* rses,
-                          char*              name);
 
 static ROUTER_OBJECT MyObject =
 {
@@ -117,6 +90,45 @@ static ROUTER_OBJECT MyObject =
     getCapabilities
 };
 
+static SPINLOCK instlock;
+static ROUTER_INSTANCE* instances;
+
+/**
+ * The module initialisation routine, called when the module
+ * is first loaded.
+ */
+void ModuleInit()
+{
+    MXS_NOTICE("Initializing Schema Sharding Router.");
+    spinlock_init(&instlock);
+    instances = NULL;
+}
+
+MXS_DECLARE_MODULE(ROUTER)
+{
+    MODULE_BETA_RELEASE,
+    "A database sharding router for simple sharding",
+    "V1.0.0",
+    ModuleInit,
+    &MyObject
+};
+
+static int router_get_servercount(ROUTER_INSTANCE* router);
+static backend_ref_t* get_bref_from_dcb(ROUTER_CLIENT_SES* rses, DCB* dcb);
+
+static route_target_t get_shard_route_target(qc_query_type_t qtype,
+                                             bool            trx_active,
+                                             HINT*           hint);
+
+
+static bool connect_backend_servers(backend_ref_t*   backend_ref,
+                                    int              router_nservers,
+                                    SESSION*         session,
+                                    ROUTER_INSTANCE* router);
+
+static bool get_shard_dcb(DCB**              dcb,
+                          ROUTER_CLIENT_SES* rses,
+                          char*              name);
 static bool rses_begin_locked_router_action(ROUTER_CLIENT_SES* rses);
 static void rses_end_locked_router_action(ROUTER_CLIENT_SES* rses);
 static void mysql_sescmd_done(mysql_sescmd_t* sescmd);
@@ -162,9 +174,6 @@ static void handle_error_reply_client(SESSION*           ses,
                                       ROUTER_CLIENT_SES* rses,
                                       DCB*               backend_dcb,
                                       GWBUF*             errmsg);
-
-static SPINLOCK instlock;
-static ROUTER_INSTANCE* instances;
 
 bool detect_show_shards(GWBUF* query);
 int process_show_shards(ROUTER_CLIENT_SES* rses);
@@ -647,40 +656,6 @@ int internalReply(DCB* dcb)
         return SESSION_ROUTE_REPLY(dcb->session, tmp);
     }
     return 1;
-}
-
-/**
- * Implementation of the mandatory version entry point
- *
- * @return version string of the module
- */
-char* version()
-{
-    return version_str;
-}
-
-/**
- * The module initialisation routine, called when the module
- * is first loaded.
- */
-void ModuleInit()
-{
-    MXS_NOTICE("Initializing Schema Sharding Router.");
-    spinlock_init(&instlock);
-    instances = NULL;
-}
-
-/**
- * The module entry point routine. It is this routine that
- * must populate the structure that is referred to as the
- * "module object", this is a structure with the set of
- * external entry points for this module.
- *
- * @return The module object
- */
-ROUTER_OBJECT* GetModuleObject()
-{
-    return &MyObject;
 }
 
 /**

@@ -30,22 +30,6 @@
 #include <maxscale/alloc.h>
 
 static void monitorMain(void *);
-
-static char *version_str = "V2.1.0";
-
-/* @see function load_module in load_utils.c for explanation of the following
- * lint directives.
- */
-/*lint -e14 */
-MODULE_INFO info =
-{
-    MODULE_API_MONITOR,
-    MODULE_BETA_RELEASE,
-    MONITOR_VERSION,
-    "A MySQL cluster SQL node monitor"
-};
-/*lint +e14 */
-
 static void *startMonitor(void *, void*);
 static void stopMonitor(void *);
 static void diagnostics(DCB *, void *);
@@ -58,20 +42,7 @@ static MONITOR_OBJECT MyObject =
     diagnostics
 };
 
-/**
- * Implementation of the mandatory version entry point
- *
- * @return version string of the module
- *
- * @see function load_module in load_utils.c for explanation of the following
- * lint directives.
- */
-/*lint -e14 */
-char *
-version()
-{
-    return version_str;
-}
+#define VERSION_STR "V2.1.0"
 
 /**
  * The module initialisation routine, called when the module
@@ -80,22 +51,20 @@ version()
 void
 ModuleInit()
 {
-    MXS_NOTICE("Initialise the MySQL Cluster Monitor module %s.", version_str);
+    MXS_NOTICE("Initialise the MySQL Cluster Monitor module %s.", VERSION_STR);
 }
 
-/**
- * The module entry point routine. It is this routine that
- * must populate the structure that is referred to as the
- * "module object", this is a structure with the set of
- * external entry points for this module.
- *
- * @return The module object
- */
-MONITOR_OBJECT *
-GetModuleObject()
+/* @see function load_module in load_utils.c for explanation of the following
+ * lint directives. */
+/*lint -e14 */
+MXS_DECLARE_MODULE(MONITOR)
 {
-    return &MyObject;
-}
+    MODULE_BETA_RELEASE,
+    "A MySQL cluster SQL node monitor",
+    VERSION_STR,
+    ModuleInit,
+    &MyObject
+};
 /*lint +e14 */
 
 /**
@@ -306,7 +275,7 @@ monitorDatabase(MONITOR_SERVERS *database, char *defaultUser, char *defaultPassw
             mysql_free_result(result);
             MXS_ERROR("Unexpected result for \"SHOW STATUS LIKE "
                       "'Ndb_number_of_ready_data_nodes'\". Expected 2 columns."
-                      " MySQL Version: %s", version_str);
+                      " MySQL Version: %s", server_string);
             return;
         }
 
@@ -329,7 +298,7 @@ monitorDatabase(MONITOR_SERVERS *database, char *defaultUser, char *defaultPassw
             mysql_free_result(result);
             MXS_ERROR("Unexpected result for \"SHOW STATUS LIKE 'Ndb_cluster_node_id'\". "
                       "Expected 2 columns."
-                      " MySQL Version: %s", version_str);
+                      " MySQL Version: %s", server_string);
             return;
         }
 

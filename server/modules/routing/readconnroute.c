@@ -83,24 +83,11 @@
 #include <dcb.h>
 #include <spinlock.h>
 #include <modinfo.h>
-
 #include <skygw_types.h>
 #include <skygw_utils.h>
 #include <log_manager.h>
-
 #include <mysql_client_server_protocol.h>
-
 #include "modutil.h"
-
-MODULE_INFO info =
-{
-    MODULE_API_ROUTER,
-    MODULE_GA,
-    ROUTER_VERSION,
-    "A connection based router to load balance based on connections"
-};
-
-static char *version_str = "V1.1.0";
 
 /* The router entry points */
 static ROUTER *createInstance(SERVICE *service, char **options);
@@ -130,25 +117,9 @@ static ROUTER_OBJECT MyObject =
     getCapabilities
 };
 
-static bool rses_begin_locked_router_action(ROUTER_CLIENT_SES* rses);
-
-static void rses_end_locked_router_action(ROUTER_CLIENT_SES* rses);
-
-static BACKEND *get_root_master(BACKEND **servers);
-static int handle_state_switch(DCB* dcb, DCB_REASON reason, void * routersession);
-static SPINLOCK instlock;
+static SPINLOCK         instlock;
 static ROUTER_INSTANCE *instances;
-
-/**
- * Implementation of the mandatory version entry point
- *
- * @return version string of the module
- */
-char *
-version()
-{
-    return version_str;
-}
+#define VERSION_STR "V1.1.0"
 
 /**
  * The module initialisation routine, called when the module
@@ -157,24 +128,24 @@ version()
 void
 ModuleInit()
 {
-    MXS_NOTICE("Initialise readconnroute router module %s.", version_str);
+    MXS_NOTICE("Initialise readconnroute router module %s.", VERSION_STR);
     spinlock_init(&instlock);
     instances = NULL;
 }
 
-/**
- * The module entry point routine. It is this routine that
- * must populate the structure that is referred to as the
- * "module object", this is a structure with the set of
- * external entry points for this module.
- *
- * @return The module object
- */
-ROUTER_OBJECT *
-GetModuleObject()
+MXS_DECLARE_MODULE(ROUTER)
 {
-    return &MyObject;
-}
+    MODULE_GA,
+    "A connection based router to load balance based on connections",
+    VERSION_STR,
+    ModuleInit,
+    &MyObject
+};
+
+static bool rses_begin_locked_router_action(ROUTER_CLIENT_SES* rses);
+static void rses_end_locked_router_action(ROUTER_CLIENT_SES* rses);
+static BACKEND *get_root_master(BACKEND **servers);
+static int handle_state_switch(DCB* dcb, DCB_REASON reason, void * routersession);
 
 static inline void free_readconn_instance(ROUTER_INSTANCE *router)
 {

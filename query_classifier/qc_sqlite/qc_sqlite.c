@@ -2786,8 +2786,6 @@ static char** qc_sqlite_get_database_names(GWBUF* query, int* sizep)
  * EXPORTS
  */
 
-static char version_string[] = "V1.0.0";
-
 static QUERY_CLASSIFIER qc =
 {
     qc_sqlite_init,
@@ -2807,25 +2805,11 @@ static QUERY_CLASSIFIER qc =
     qc_sqlite_get_database_names,
 };
 
-
-MODULE_INFO info =
+MXS_DECLARE_MODULE(QUERY_CLASSIFIER)
 {
-    MODULE_API_QUERY_CLASSIFIER,
     MODULE_BETA_RELEASE,
-    QUERY_CLASSIFIER_VERSION,
     "Query classifier using sqlite.",
+    "V1.0.0",
+    NULL,
+    &qc
 };
-
-char* version()
-{
-    return version_string;
-}
-
-void ModuleInit()
-{
-}
-
-QUERY_CLASSIFIER* GetModuleObject()
-{
-    return &qc;
-}

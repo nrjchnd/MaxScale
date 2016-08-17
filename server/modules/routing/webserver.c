@@ -41,7 +41,7 @@ MODULE_INFO     info =
 {
     MODULE_API_ROUTER,
     MODULE_IN_DEVELOPMENT,
-    ROUTER_VERSION,
+    MXS_ROUTER_VERSION,
     "A test router - not for use in real systems"
 };
 

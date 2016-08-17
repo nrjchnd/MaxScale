@@ -37,19 +37,6 @@
 #include <maxadmin.h>
 #include <maxscale/alloc.h>
 
- /* @see function load_module in load_utils.c for explanation of the following
-  * lint directives.
- */
-/*lint -e14 */
-MODULE_INFO info =
-{
-    MODULE_API_PROTOCOL,
-    MODULE_GA,
-    GWPROTOCOL_VERSION,
-    "A maxscale protocol for the administration interface"
-};
-/*lint +e14 */
-
 /**
  * @file maxscaled.c - MaxScale administration protocol
  *
@@ -63,8 +50,6 @@ MODULE_INFO info =
  *
  * @endverbatim
  */
-
-static char *version_str = "V2.0.0";
 
 static int maxscaled_read_event(DCB* dcb);
 static int maxscaled_write_event(DCB *dcb);
@@ -96,41 +81,17 @@ static GWPROTOCOL MyObject =
     NULL                            /**< Connection limit reached      */
 };
 
-/**
- * Implementation of the mandatory version entry point
- *
- * @return version string of the module
- *
- * @see function load_module in load_utils.c for explanation of the following
- * lint directives.
- */
+/** @see function load_module in load_utils.c for explanation of the following
+ * lint directives. */
 /*lint -e14 */
-char*  version()
+MXS_DECLARE_MODULE(PROTOCOL)
 {
-    return version_str;
-}
-
-/**
- * The module initialisation routine, called when the module
- * is first loaded.
- */
-void ModuleInit()
-{
-    MXS_INFO("Initialise MaxScaled Protocol module.");;
-}
-
-/**
- * The module entry point routine. It is this routine that
- * must populate the structure that is referred to as the
- * "module object", this is a structure with the set of
- * external entry points for this module.
- *
- * @return The module object
- */
-GWPROTOCOL* GetModuleObject()
-{
-    return &MyObject;
-}
+    MODULE_GA,
+    "A maxscale protocol for the administration interface",
+    "V2.0.0",
+    NULL,
+    &MyObject
+};
 /*lint +e14 */
 
 /**

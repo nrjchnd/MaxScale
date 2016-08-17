@@ -61,21 +61,6 @@
 
 #include "gw_authenticator.h"
 
- /* @see function load_module in load_utils.c for explanation of the following
-  * lint directives.
- */
-/*lint -e14 */
-MODULE_INFO info =
-{
-    MODULE_API_PROTOCOL,
-    MODULE_GA,
-    GWPROTOCOL_VERSION,
-    "The client to MaxScale MySQL protocol implementation"
-};
-/*lint +e14*/
-
-static char *version_str = "V1.1.0";
-
 static int gw_MySQLAccept(DCB *listener);
 static int gw_MySQLListener(DCB *listener, char *config_bind);
 static int gw_read_client_event(DCB* dcb);
@@ -117,41 +102,18 @@ static GWPROTOCOL MyObject =
     gw_connection_limit                     /* Send error connection limit   */
 };
 
-/**
- * Implementation of the mandatory version entry point
- *
- * @return version string of the module
- *
- * @see function load_module in load_utils.c for explanation of the following
- * lint directives.
- */
+/* @see function load_module in load_utils.c for explanation of the following
+ * lint directives.*/
 /*lint -e14 */
-char* version()
+MXS_DECLARE_MODULE(PROTOCOL)
 {
-    return version_str;
-}
-
-/**
- * The module initialisation routine, called when the module
- * is first loaded.
- */
-void ModuleInit()
-{
-}
-
-/**
- * The module entry point routine. It is this routine that
- * must populate the structure that is referred to as the
- * "module object", this is a structure with the set of
- * external entry points for this module.
- *
- * @return The module object
- */
-GWPROTOCOL* GetModuleObject()
-{
-    return &MyObject;
-}
-/*lint +e14 */
+    MODULE_GA,
+    "The client to MaxScale MySQL protocol implementation",
+    "V1.1.0",
+    NULL,
+    &MyObject
+};
+/*lint +e14*/
 
 /**
  * The default authenticator name for this protocol

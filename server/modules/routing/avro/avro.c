@@ -38,15 +38,12 @@
 #include <spinlock.h>
 #include <housekeeper.h>
 #include <time.h>
-
 #include <skygw_types.h>
 #include <skygw_utils.h>
 #include <log_manager.h>
-
 #include <mysql_client_server_protocol.h>
 #include <ini.h>
 #include <sys/stat.h>
-
 #include <avrorouter.h>
 #include <random_jkiss.h>
 #include <binlog_common.h>
@@ -59,7 +56,6 @@
 
 #define AVRO_TASK_DELAY_MAX 15
 
-static char *version_str = "V1.0.0";
 static const char* avro_task_name = "binlog_to_avro";
 static const char* index_task_name = "avro_indexing";
 static const char* avro_index_name = "avro.index";
@@ -112,17 +108,7 @@ static ROUTER_OBJECT MyObject =
 
 static SPINLOCK instlock;
 static AVRO_INSTANCE *instances;
-
-/**
- * Implementation of the mandatory version entry point
- *
- * @return version string of the module
- */
-char *
-version()
-{
-    return version_str;
-}
+#define VERSION_STR "V1.1.0"
 
 /**
  * The module initialisation routine, called when the module
@@ -131,24 +117,19 @@ version()
 void
 ModuleInit()
 {
-    MXS_NOTICE("Initialized avrorouter module %s.\n", version_str);
+    MXS_NOTICE("Initialized avrorouter module %s.", VERSION_STR);
     spinlock_init(&instlock);
     instances = NULL;
 }
 
-/**
- * The module entry point routine. It is this routine that
- * must populate the structure that is referred to as the
- * "module object", this is a structure with the set of
- * external entry points for this module.
- *
- * @return The module object
- */
-ROUTER_OBJECT *
-GetModuleObject()
+MXS_DECLARE_MODULE(ROUTER)
 {
-    return &MyObject;
-}
+    MODULE_BETA_RELEASE,
+    "Binlog to Avro conversion service",
+    VERSION_STR,
+    ModuleInit,
+    &MyObject
+};
 
 /**
  * Create the required tables in the sqlite database

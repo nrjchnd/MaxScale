@@ -86,30 +86,6 @@ void qc_thread_end(void)
 
 extern "C"
 {
-
-    void ModuleInit()
-    {
-    }
-
-    /* @see function load_module in load_utils.c for explanation of the following
-     * lint directives.
-    */
-    /*lint -e14 */
-    MODULE_INFO info =
-    {
-        MODULE_API_QUERY_CLASSIFIER,
-        MODULE_IN_DEVELOPMENT,
-        QUERY_CLASSIFIER_VERSION,
-        const_cast<char*>("Dummy Query Classifier"),
-    };
-
-    static char version_string[] = "V1.0.0";
-
-    char* version()
-    {
-        return const_cast<char*>(version_string);
-    }
-
     static QUERY_CLASSIFIER qc =
     {
         qc_init,
@@ -129,9 +105,12 @@ extern "C"
         qc_get_database_names,
     };
 
-    QUERY_CLASSIFIER* GetModuleObject()
+    MXS_DECLARE_MODULE(QUERY_CLASSIFIER)
     {
-        return &qc;
-    }
-    /*lint +e14 */
+        MODULE_IN_DEVELOPMENT,
+        "Dummy Query Classifier",
+        "V1.0.0",
+        NULL,
+        &qc
+    };
 }

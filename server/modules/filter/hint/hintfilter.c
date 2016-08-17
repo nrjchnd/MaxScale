@@ -10,6 +10,7 @@
  * of this software will be governed by version 2 or later of the General
  * Public License.
  */
+
 #include <stdio.h>
 #include <filter.h>
 #include <maxscale/alloc.h>
@@ -23,16 +24,6 @@
  *
  */
 
-MODULE_INFO info =
-{
-    MODULE_API_FILTER,
-    MODULE_ALPHA_RELEASE,
-    FILTER_VERSION,
-    "A hint parsing filter"
-};
-
-static char *version_str = "V1.0.0";
-
 static FILTER *createInstance(char **options, FILTER_PARAMETER **params);
 static void *newSession(FILTER *instance, SESSION *session);
 static void closeSession(FILTER *instance, void *session);
@@ -40,7 +31,6 @@ static void freeSession(FILTER *instance, void *session);
 static void setDownstream(FILTER *instance, void *fsession, DOWNSTREAM *downstream);
 static int routeQuery(FILTER *instance, void *fsession, GWBUF *queue);
 static void diagnostic(FILTER *instance, void *fsession, DCB *dcb);
-
 
 static FILTER_OBJECT MyObject =
 {
@@ -55,43 +45,14 @@ static FILTER_OBJECT MyObject =
     diagnostic,
 };
 
-/**
- * Implementation of the mandatory version entry point
- *
- * @return version string of the module
- */
-char *
-version()
+MXS_DECLARE_MODULE(FILTER)
 {
-    return version_str;
-}
-
-/**
- * The module initialisation routine, called when the module
- * is first loaded.
- * @see function load_module in load_utils.c for explanation of lint
- */
-
-/*lint -e14 */
-void
-ModuleInit()
-{
-}
-/*lint +e14 */
-
-/**
- * The module entry point routine. It is this routine that
- * must populate the structure that is referred to as the
- * "module object", this is a structure with the set of
- * external entry points for this module.
- *
- * @return The module object
- */
-FILTER_OBJECT *
-GetModuleObject()
-{
-    return &MyObject;
-}
+    MODULE_ALPHA_RELEASE,
+    "A hint parsing filter",
+    "V1.0.0",
+    NULL,
+    &MyObject
+};
 
 /**
  * Create an instance of the filter for a particular service

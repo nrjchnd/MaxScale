@@ -78,15 +78,6 @@
 #include <housekeeper.h>
 #include <maxscale/alloc.h>
 
-MODULE_INFO info =
-{
-    MODULE_API_FILTER,
-    MODULE_ALPHA_RELEASE,
-    FILTER_VERSION,
-    "A RabbitMQ query logging filter"
-};
-
-static char *version_str = "V1.0.2";
 static int uid_gen;
 static int hktask_id = 0;
 /*
@@ -102,7 +93,6 @@ static int routeQuery(FILTER *instance, void *fsession, GWBUF *queue);
 static int clientReply(FILTER *instance, void *fsession, GWBUF *queue);
 static void diagnostic(FILTER *instance, void *fsession, DCB *dcb);
 
-
 static FILTER_OBJECT MyObject =
 {
     createInstance,
@@ -114,6 +104,15 @@ static FILTER_OBJECT MyObject =
     routeQuery,
     clientReply,
     diagnostic,
+};
+
+MXS_DECLARE_MODULE(FILTER)
+{
+    MODULE_ALPHA_RELEASE,
+    "A RabbitMQ query logging filter",
+    "V1.0.2",
+    NULL,
+    &MyObject
 };
 
 /**
@@ -258,43 +257,6 @@ typedef struct
 } MQ_SESSION;
 
 void sendMessage(void* data);
-
-/**
- * Implementation of the mandatory version entry point
- *
- * @return version string of the module
- */
-char *
-version()
-{
-    return version_str;
-}
-
-/**
- * The module initialisation routine, called when the module
- * is first loaded.
- * @see function load_module in load_utils.c for explanation of lint
- */
-/*lint -e14 */
-void
-ModuleInit()
-{
-}
-/*lint +e14 */
-
-/**
- * The module entry point routine. It is this routine that
- * must populate the structure that is referred to as the
- * "module object", this is a structure with the set of
- * external entry points for this module.
- *
- * @return The module object
- */
-FILTER_OBJECT *
-GetModuleObject()
-{
-    return &MyObject;
-}
 
 /**
  * Internal function used to initialize the connection to

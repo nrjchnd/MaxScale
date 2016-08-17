@@ -33,21 +33,6 @@
 #include <buffer.h>
 #include <users.h>
 
-/* @see function load_module in load_utils.c for explanation of the following
- * lint directives.
- */
-/*lint -e14 */
-MODULE_INFO info =
-{
-    MODULE_API_AUTHENTICATOR,
-    MODULE_GA,
-    GWAUTHENTICATOR_VERSION,
-    "The Null client authenticator implementation"
-};
-/*lint +e14 */
-
-static char *version_str = "V1.1.0";
-
 static int null_auth_set_protocol_data(DCB *dcb, GWBUF *buf);
 static bool null_auth_is_client_ssl_capable(DCB *dcb);
 static int null_auth_authenticate(DCB *dcb);
@@ -65,40 +50,18 @@ static GWAUTHENTICATOR MyObject =
     users_default_loadusers
 };
 
-/**
- * Implementation of the mandatory version entry point
- *
- * @return version string of the module
- *
- * @see function load_module in load_utils.c for explanation of the following
+/* @see function load_module in load_utils.c for explanation of the following
  * lint directives.
  */
 /*lint -e14 */
-char* version()
+MXS_DECLARE_MODULE(AUTHENTICATOR)
 {
-    return version_str;
-}
-
-/**
- * The module initialisation routine, called when the module
- * is first loaded.
- */
-void ModuleInit()
-{
-}
-
-/**
- * The module entry point routine. It is this routine that
- * must populate the structure that is referred to as the
- * "module object", this is a structure with the set of
- * external entry points for this module.
- *
- * @return The module object
- */
-GWAUTHENTICATOR* GetModuleObject()
-{
-    return &MyObject;
-}
+    MODULE_GA,
+    "The Null client authenticator implementation",
+    "V1.1.0",
+    NULL,
+    &MyObject
+};
 /*lint +e14 */
 
 /**

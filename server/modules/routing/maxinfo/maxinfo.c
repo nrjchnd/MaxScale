@@ -53,18 +53,7 @@
 #include <users.h>
 #include <dbusers.h>
 
-
-MODULE_INFO info =
-{
-    MODULE_API_ROUTER,
-    MODULE_ALPHA_RELEASE,
-    ROUTER_VERSION,
-    "The MaxScale Information Schema"
-};
-
 extern char *create_hex_sha1_sha1_passwd(char *passwd);
-
-static char *version_str = "V1.0.0";
 
 static int maxinfo_statistics(INFO_INSTANCE *, INFO_SESSION *, GWBUF *);
 static int maxinfo_ping(INFO_INSTANCE *, INFO_SESSION *, GWBUF *);
@@ -102,19 +91,9 @@ static ROUTER_OBJECT MyObject =
     getCapabilities
 };
 
-static SPINLOCK     instlock;
-static INFO_INSTANCE    *instances;
-
-/**
- * Implementation of the mandatory version entry point
- *
- * @return version string of the module
- */
-char *
-version()
-{
-    return version_str;
-}
+static SPINLOCK       instlock;
+static INFO_INSTANCE *instances;
+#define VERSION_STR "V1.0.0"
 
 /**
  * The module initialisation routine, called when the module
@@ -123,24 +102,19 @@ version()
 void
 ModuleInit()
 {
-    MXS_NOTICE("Initialise MaxInfo router module %s.", version_str);
+    MXS_NOTICE("Initialise MaxInfo router module %s.", VERSION_STR);
     spinlock_init(&instlock);
     instances = NULL;
 }
 
-/**
- * The module entry point routine. It is this routine that
- * must populate the structure that is referred to as the
- * "module object", this is a structure with the set of
- * external entry points for this module.
- *
- * @return The module object
- */
-ROUTER_OBJECT *
-GetModuleObject()
+MXS_DECLARE_MODULE(ROUTER)
 {
-    return &MyObject;
-}
+    MODULE_ALPHA_RELEASE,
+    "The MaxScale Information Schema",
+    VERSION_STR,
+    ModuleInit,
+    &MyObject
+};
 
 /**
  * Create an instance of the router for a particular service

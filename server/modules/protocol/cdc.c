@@ -39,17 +39,8 @@
 #include <modinfo.h>
 #include <maxscale/poll.h>
 
-MODULE_INFO info =
-{
-    MODULE_API_PROTOCOL,
-    MODULE_IN_DEVELOPMENT,
-    GWPROTOCOL_VERSION,
-    "A Change Data Capture Listener implementation for use in binlog events retrieval"
-};
-
 #define ISspace(x) isspace((int)(x))
 #define CDC_SERVER_STRING "MaxScale(c) v.1.0.0"
-static char *version_str = "V1.0.0";
 
 static int cdc_read_event(DCB* dcb);
 static int cdc_write_event(DCB *dcb);
@@ -89,39 +80,14 @@ static GWPROTOCOL MyObject =
     cdc_default_auth /* default authentication */
 };
 
-/**
- * Implementation of the mandatory version entry point
- *
- * @return version string of the module
- */
-char *
-version()
+MXS_DECLARE_MODULE(PROTOCOL)
 {
-    return version_str;
-}
-
-/**
- * The module initialisation routine, called when the module
- * is first loaded.
- */
-void
-ModuleInit()
-{
-}
-
-/**
- * The module entry point routine. It is this routine that
- * must populate the structure that is referred to as the
- * "module object", this is a structure with the set of
- * external entry points for this module.
- *
- * @return The module object
- */
-GWPROTOCOL *
-GetModuleObject()
-{
-    return &MyObject;
-}
+    MODULE_IN_DEVELOPMENT,
+    "A Change Data Capture Listener implementation for use in binlog events retrieval",
+    "V1.0.0",
+    NULL,
+    &MyObject
+};
 
 /**
  * Read event for EPOLLIN on the CDC protocol module.

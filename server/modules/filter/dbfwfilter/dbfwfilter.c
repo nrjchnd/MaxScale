@@ -86,16 +86,6 @@
 int dbfw_yyparse(void*);
 #endif
 
-MODULE_INFO info =
-{
-    MODULE_API_FILTER,
-    MODULE_GA,
-    FILTER_VERSION,
-    "Firewall Filter"
-};
-
-static char *version_str = "V1.2.0";
-
 /*
  * The filter entry points
  */
@@ -118,6 +108,15 @@ static FILTER_OBJECT MyObject =
     routeQuery,
     NULL,
     diagnostic,
+};
+
+MXS_DECLARE_MODULE(FILTER)
+{
+    MODULE_GA,
+    "Firewall Filter",
+    "V1.2.0",
+    NULL,
+    &MyObject
 };
 
 /**
@@ -656,40 +655,6 @@ TIMERANGE* split_reverse_time(TIMERANGE* tr)
     tr->end.tm_min = 59;
     tr->end.tm_sec = 59;
     return tmp;
-}
-
-/**
- * Implementation of the mandatory version entry point
- *
- * @return version string of the module
- */
-char * version()
-{
-    return version_str;
-}
-
-/**
- * The module initialisation routine, called when the module
- * is first loaded.
- * @see function load_module in load_utils.c for explanation of lint
- */
-/*lint -e14 */
-void ModuleInit()
-{
-}
-/*lint +e14 */
-
-/**
- * The module entry point routine. It is this routine that
- * must populate the structure that is referred to as the
- * "module object", this is a structure with the set of
- * external entry points for this module.
- *
- * @return The module object
- */
-FILTER_OBJECT * GetModuleObject()
-{
-    return &MyObject;
 }
 
 /**

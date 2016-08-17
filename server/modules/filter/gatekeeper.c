@@ -32,14 +32,6 @@
  * queries that do not conform to the training set.
  */
 
-MODULE_INFO info =
-{
-    MODULE_API_FILTER,
-    MODULE_ALPHA_RELEASE,
-    FILTER_VERSION,
-    "Learning firewall filter"
-};
-
 enum firewall_mode
 {
     ENFORCE,
@@ -72,7 +64,6 @@ typedef struct
     GK_STATS stats; /**< Session statistics */
 } GK_SESSION;
 
-static char *version_str = "V1.0.0";
 static const char* datafile_name = "gatekeeper.data";
 
 /** Prefix all log messages with this tag */
@@ -105,36 +96,14 @@ static FILTER_OBJECT MyObject =
     diagnostic,
 };
 
-/**
- * Implementation of the mandatory version entry point
- *
- * @return version string of the module
- */
-char* version()
+MXS_DECLARE_MODULE(FILTER)
 {
-    return version_str;
-}
-
-/**
- * The module initialization routine, called when the module
- * is first loaded.
- */
-void ModuleInit()
-{
-}
-
-/**
- * The module entry point routine. It is this routine that
- * must populate the structure that is referred to as the
- * "module object", this is a structure with the set of
- * external entry points for this module.
- *
- * @return The module object
- */
-FILTER_OBJECT* GetModuleObject()
-{
-    return &MyObject;
-}
+    MODULE_ALPHA_RELEASE,
+    "Learning firewall filter",
+    "V1.0.0",
+    NULL,
+    &MyObject
+};
 
 /**
  * Create an instance of the filter for a particular service

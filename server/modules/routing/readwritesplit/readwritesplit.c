@@ -16,10 +16,8 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdint.h>
-
 #include <router.h>
 #include <readwritesplit.h>
-
 #include <mysql.h>
 #include <skygw_utils.h>
 #include <log_manager.h>
@@ -31,12 +29,6 @@
 #include <mysql_client_server_protocol.h>
 #include <mysqld_error.h>
 #include <maxscale/alloc.h>
-
-MODULE_INFO info =
-{
-    MODULE_API_ROUTER, MODULE_GA, ROUTER_VERSION,
-    "A Read/Write splitting router for enhancement read scalability"
-};
 
 #if defined(SS_DEBUG)
 #include <mysql_client_server_protocol.h>
@@ -69,8 +61,6 @@ MODULE_INFO info =
  *
  * @endverbatim
  */
-
-static char *version_str = "V1.1.0";
 
 static ROUTER *createInstance(SERVICE *service, char **options);
 static void *newSession(ROUTER *instance, SESSION *session);
@@ -154,8 +144,6 @@ static bool get_dcb(DCB **dcb, ROUTER_CLIENT_SES *rses, backend_type_t btype,
 static bool rwsplit_process_router_options(ROUTER_INSTANCE *router,
                                            char **options);
 
-
-
 static ROUTER_OBJECT MyObject =
 {
     createInstance,
@@ -167,6 +155,29 @@ static ROUTER_OBJECT MyObject =
     clientReply,
     handleError,
     getCapabilities
+};
+
+static SPINLOCK instlock;
+static ROUTER_INSTANCE *instances;
+
+/**
+ * The module initialisation routine, called when the module
+ * is first loaded.
+ */
+void ModuleInit()
+{
+    MXS_NOTICE("Initializing statemend-based read/write split router module.");
+    spinlock_init(&instlock);
+    instances = NULL;
+}
+
+MXS_DECLARE_MODULE(ROUTER)
+{
+    MODULE_GA,
+    "A Read/Write splitting router for enhancement read scalability",
+    "V1.1.0",
+    ModuleInit,
+    &MyObject
 };
 
 static bool rses_begin_locked_router_action(ROUTER_CLIENT_SES *rses);
@@ -240,9 +251,6 @@ static BACKEND *get_root_master(backend_ref_t *servers, int router_nservers);
 static bool have_enough_servers(ROUTER_CLIENT_SES **rses, const int nsrv,
                                 int router_nsrv, ROUTER_INSTANCE *router);
 
-static SPINLOCK instlock;
-static ROUTER_INSTANCE *instances;
-
 static int hashkeyfun(const void *key);
 static int hashcmpfun(const void *, const void *);
 static bool check_for_multi_stmt(ROUTER_CLIENT_SES *rses, GWBUF *buf,
@@ -283,40 +291,6 @@ static void *hstrdup(const void *fval)
 static void hfree(void *fval)
 {
     MXS_FREE(fval);
-}
-
-/**
- * Implementation of the mandatory version entry point
- *
- * @return version string of the module
- */
-char *version()
-{
-    return version_str;
-}
-
-/**
- * The module initialisation routine, called when the module
- * is first loaded.
- */
-void ModuleInit()
-{
-    MXS_NOTICE("Initializing statemend-based read/write split router module.");
-    spinlock_init(&instlock);
-    instances = NULL;
-}
-
-/**
- * The module entry point routine. It is this routine that
- * must populate the structure that is referred to as the
- * "module object", this is a structure with the set of
- * external entry points for this module.
- *
- * @return The module object
- */
-ROUTER_OBJECT *GetModuleObject()
-{
-    return &MyObject;
 }
 
 /**

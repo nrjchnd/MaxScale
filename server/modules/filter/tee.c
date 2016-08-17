@@ -95,16 +95,6 @@ static unsigned char required_packets[] =
     0
 };
 
-MODULE_INFO info =
-{
-    MODULE_API_FILTER,
-    MODULE_GA,
-    FILTER_VERSION,
-    "A tee piece in the filter plumbing"
-};
-
-static char *version_str = "V1.0.0";
-
 /*
  * The filter entry points
  */
@@ -129,6 +119,15 @@ static FILTER_OBJECT MyObject =
     routeQuery,
     clientReply,
     diagnostic,
+};
+
+MXS_DECLARE_MODULE(FILTER)
+{
+    MODULE_GA,
+    "A tee piece in the filter plumbing",
+    "V1.0.0",
+    NULL,
+    &MyObject
 };
 
 /**
@@ -304,47 +303,6 @@ orphan_free(void* data)
 #ifdef SS_DEBUG
     MXS_DEBUG("tee.c: %d orphans freed.", o_freed);
 #endif
-}
-
-/**
- * Implementation of the mandatory version entry point
- *
- * @return version string of the module
- */
-char *
-version()
-{
-    return version_str;
-}
-
-/**
- * The module initialisation routine, called when the module
- * is first loaded.
- * @see function load_module in load_utils.c for explanation of lint
- */
-/*lint -e14 */
-void
-ModuleInit()
-{
-    spinlock_init(&orphanLock);
-#ifdef SS_DEBUG
-    spinlock_init(&debug_lock);
-#endif
-}
-/*lint +e14 */
-
-/**
- * The module entry point routine. It is this routine that
- * must populate the structure that is referred to as the
- * "module object", this is a structure with the set of
- * external entry points for this module.
- *
- * @return The module object
- */
-FILTER_OBJECT *
-GetModuleObject()
-{
-    return &MyObject;
 }
 
 /**
@@ -589,7 +547,7 @@ newSession(FILTER *instance, SESSION *session)
 
             ss_dassert(ses->ses_is_child);
 
-            dummy->obj = GetModuleObject();
+            dummy->obj = &MyObject;
             dummy->filter = NULL;
             my_session->branch_session = ses;
             my_session->branch_dcb = dcb;
